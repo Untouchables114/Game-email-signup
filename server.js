@@ -27,8 +27,7 @@ app.post('/signup', async (req, res) => {
       },
       body: JSON.stringify({
   email: email,
-  groups: [GROUP_ID],
-  status: "unconfirmed"
+  groups: [GROUP_ID]
 })
     });
 
