@@ -26,9 +26,10 @@ app.post('/signup', async (req, res) => {
         'Authorization': `Bearer ${MAILERLITE_API_KEY}`
       },
       body: JSON.stringify({
-        email: email,
-        groups: [GROUP_ID]
-      })
+  email: email,
+  groups: [GROUP_ID],
+  status: "unconfirmed"
+})
     });
 
     const data = await response.json();
