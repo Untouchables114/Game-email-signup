@@ -6,6 +6,12 @@ const app = express();
 app.use(express.json());
 app.use(cors()); // allows your game (running in a browser) to talk to this server
 
+const { createClient } = require('@supabase/supabase-js');
+
+const SUPABASE_URL = 'https://ydhcqmtjqcyhtmnypucr.supabase.co';
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
+const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
+
 // ⬇️ FILL THESE TWO IN ⬇️
 const MAILERLITE_API_KEY = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI0IiwianRpIjoiZTZiYTRjMzNiNTU3ZTU4NzVmMzBlNTgwYTY0MDcxNjRhOTA2MzJlNjgzODBiYWRkNDIwNDQ1OGVhZjYyMmFhMDZiZjZkMmZhOTVkNmY4MzAiLCJpYXQiOjE3ODcxMTAwNDMuMzY3NDg1LCJuYmYiOjE3ODcxMTAwNDMuMzY3NDg3LCJleHAiOjQ5NDI3ODM2NDMuMzYyODgyLCJzdWIiOiIyNjAyMzQ0Iiwic2NvcGVzIjpbXX0.eU46LDU7UoKSEZbVjLyXZaUjar9E0WNADtDvTxR-XEclYPU6TH_g1g3v6Zvcw1coRN2qOYWuVxzU_WdirFXNGKkaeKwgFk4IqJJhQpqlBvcFeV_c90_CY17Nt9-sHeWE_0Z-BOi3PebiUKRce3xkAOULox9jOt3pBdAC1xJXTXHw8A_9jl-NZRWPb_RybVHJ5GuIoKhFGkAIDXe_dpsAVjVzkCJk8K8OwklwxjlvlGlkGfh_FZps-yjsgvMCoJ9W6BJyABrlgp3sEEIA0dK9-y3xnCZccihJBuue852dCfAP8C5OoYroqm_mJ7FbBfGgY4_AFBiQPt0F1EZilD4M9T_Cn_tfZm9iphijYX185ad0azxjiOLt1tmdgkqwOriqe3AnWpzwXu9yqhAqtzB3IwEazLvmXXYaCVQSSvv6NqtYDLMAL_q_OYSV3SFMtyu5PtC3jl9uF1vMDk0Wg8c-I3lxEDnuSIJzRKziCtf6IuLghjCTXSOWLsr5ubUy2oDumnVUdf34v8d7wrB6RYZfyz4Bk0_RD7OnRxMqz3x3wpd0zJ-qeK_PgMXuLBR7KSi2jePJtRObTBsXqwvYy0y2nublMvEGhVG4PGhxR0koERLxJVn1f51whZ5TIFMBxrosYbQrugQKfPsMUNC2O-xGdhNHQox-JpX1wRgguh9K0GM';
 const GROUP_ID = '196198970222970725';
@@ -44,6 +50,40 @@ app.post('/signup', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Server error, try again later.' });
+  }
+});
+
+app.post('/save-result', async (req, res) => {
+  const { email, sideName, shape, wins, draws, losses, points, badge, impactAvg, goalsAvg, team } = req.body;
+
+  if (!email || !email.includes('@')) {
+    return res.status(400).json({ success: false, message: 'Missing or invalid email.' });
+  }
+
+  try {
+    const { error } = await supabase.from('game_results').insert([{
+      email: email,
+      side_name: sideName || '',
+      shape: shape || '',
+      wins: wins || 0,
+      draws: draws || 0,
+      losses: losses || 0,
+      points: points || 0,
+      badge: badge || '',
+      impact_avg: impactAvg || 0,
+      goals_avg: goalsAvg || 0,
+      team_json: JSON.stringify(team || [])
+    }]);
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return res.status(500).json({ success: false, message: 'Could not save result.' });
+    }
+
+    res.json({ success: true, message: 'Result saved!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error.' });
   }
 });
 
